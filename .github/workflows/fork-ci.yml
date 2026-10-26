@@ -1,0 +1,29 @@
+name: fork-ci
+
+# Fork-only: runs upstream's schema tests against any branch on demand (upstream's
+# "PR Test and Validation" already has workflow_dispatch). Never merged upstream.
+on:
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: branch or SHA to test
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  schema-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_ref }}
+      - name: checked-out SHA
+        run: echo "checked-out SHA $(git rev-parse HEAD)"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.21.1'
+          cache: 'npm'
+      - run: npm ci --ignore-scripts
+      - run: npm run test:schema
